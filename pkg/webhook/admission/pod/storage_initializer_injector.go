@@ -154,6 +154,17 @@ func (mi *StorageInitializerInjector) InjectStorageInitializer(pod *v1.Pod) erro
 				SubPath:  pvcPath,
 				ReadOnly: true,
 			}
+
+			// Check if PVC source URIs is already mounted
+			// this may occur when mutator is triggered more than once
+			if userContainer.VolumeMounts != nil {
+				for _, volumeMount := range userContainer.VolumeMounts {
+					if strings.Compare(volumeMount.Name, PvcSourceMountName) == 0 {
+						return nil
+					}
+				}
+			}
+
 			userContainer.VolumeMounts = append(userContainer.VolumeMounts, pvcSourceVolumeMount)
 			if transformerContainer != nil {
 				transformerContainer.VolumeMounts = append(transformerContainer.VolumeMounts, pvcSourceVolumeMount)
